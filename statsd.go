@@ -29,22 +29,25 @@ func init() {
 }
 
 // Wrapper wraps goworkers and reports job duration and success/failures
-func Wrapper(w func(string, ...interface{}) error) func(string, ...interface{}) error {
+func Wrapper(jobMetricName string, w func(string, ...interface{}) error) func(string, ...interface{}) error {
+
+	// This appends a tag for sysdig
+	postfix := "#job=" + jobMetricName
 
 	return func(queue string, args ...interface{}) error {
 		startTime := time.Now()
 		err := w(queue, args...)
 		duration := time.Since(startTime)
 
-		client.PrecisionTiming(timeMetric, duration)
+		client.PrecisionTiming(timeMetric+postfix, duration)
 		if err == nil {
 			// Increment success count
-			client.Incr(successCountMetric, 1)
-			client.PrecisionTiming(successTimeMetric, duration)
+			client.Incr(successCountMetric+postfix, 1)
+			client.PrecisionTiming(successTimeMetric+postfix, duration)
 		} else {
 			// Increment fail count
-			client.Incr(failedCountMetric, 1)
-			client.PrecisionTiming(failedTimeMetric, duration)
+			client.Incr(failedCountMetric+postfix, 1)
+			client.PrecisionTiming(failedTimeMetric+postfix, duration)
 		}
 		return err
 	}
