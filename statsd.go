@@ -21,7 +21,7 @@ func init() {
 		host = "127.0.0.1:8125"
 	}
 
-	client = statsd.NewStatsdClient(host, "goworker")
+	client = statsd.NewStatsdClient(host, "goworker.")
 	err := client.CreateSocket()
 	if err != nil {
 		log.Fatal(err)
