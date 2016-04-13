@@ -4,5 +4,5 @@ times.
 
 ## Usage
 ```go
-goworker.Register("MyClass", gwstatsd.Wrapper("myclass", myWorker))
+goworker.Register("MyClass", gwstatsd.Wrapper(myWorker))
 ```
