@@ -9,6 +9,12 @@ import (
 
 var client statsd.Statter
 
+const timeMetric string = "time"
+const successTimeMetric string = "success.time"
+const successCountMetric string = "success.count"
+const failedTimeMetric string = "fail.time"
+const failedCountMetric string = "fail.count"
+
 func init() {
 	var err error
 
@@ -24,17 +30,7 @@ func init() {
 }
 
 // Wrapper wraps goworkers and reports job duration and success/failures
-func Wrapper(metricPrefix string, w func(string, ...interface{}) error) func(string, ...interface{}) error {
-	err := statsd.CheckName(metricPrefix)
-	if err != nil {
-		log.Fatalf("goworker-statsd: %s is not a valid metric name", metricPrefix)
-	}
-
-	timeMetric := metricPrefix + ".time"
-	successTimeMetric := metricPrefix + ".success.time"
-	failedTimeMetric := metricPrefix + ".fail.time"
-	successCountMetric := metricPrefix + ".success.count"
-	failedCountMetric := metricPrefix + ".fail.count"
+func Wrapper(w func(string, ...interface{}) error) func(string, ...interface{}) error {
 
 	return func(queue string, args ...interface{}) error {
 		startTime := time.Now()
