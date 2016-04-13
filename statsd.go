@@ -1,13 +1,13 @@
 package gwstatsd
 
 import (
-	"github.com/cactus/go-statsd-client/statsd"
+	"github.com/quipo/statsd"
 	"log"
 	"os"
 	"time"
 )
 
-var client statsd.Statter
+var client *statsd.StatsdClient
 
 const timeMetric string = "time"
 const successTimeMetric string = "success.time"
@@ -16,14 +16,13 @@ const failedTimeMetric string = "fail.time"
 const failedCountMetric string = "fail.count"
 
 func init() {
-	var err error
-
 	host := os.Getenv("STATSD_HOST")
 	if host == "" {
 		host = "127.0.0.1:8125"
 	}
 
-	client, err = statsd.NewClient(host, "goworker")
+	client = statsd.NewStatsdClient(host, "goworker")
+	err := client.CreateSocket()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,15 +36,15 @@ func Wrapper(w func(string, ...interface{}) error) func(string, ...interface{}) 
 		err := w(queue, args...)
 		duration := time.Since(startTime)
 
-		client.TimingDuration(timeMetric, duration, 1.0)
+		client.PrecisionTiming(timeMetric, duration)
 		if err == nil {
 			// Increment success count
-			client.Inc(successCountMetric, 1, 1.0)
-			client.TimingDuration(successTimeMetric, duration, 1.0)
+			client.Incr(successCountMetric, 1)
+			client.PrecisionTiming(successTimeMetric, duration)
 		} else {
 			// Increment fail count
-			client.Inc(failedCountMetric, 1, 1.0)
-			client.TimingDuration(failedTimeMetric, duration, 1.0)
+			client.Incr(failedCountMetric, 1)
+			client.PrecisionTiming(failedTimeMetric, duration)
 		}
 		return err
 	}
